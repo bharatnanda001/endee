@@ -1,4 +1,4 @@
-name: C++ CI Pipeline
+name: Project CI Pipeline
 
 on:
   push:
@@ -7,17 +7,41 @@ on:
     branches: [ "main", "master" ]
 
 jobs:
-  build:
+  build_cpp:
+    name: Build Endee C++ Engine
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
 
-    - name: Install Dependencies
+    - name: Install C++ Dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y cmake build-essential g++
+        sudo apt-get install -y cmake build-essential g++ wget gnupg libssl-dev libcurl4-openssl-dev unzip curl git
 
-    - name: Build and Test
+    - name: Build Engine
       run: |
         chmod +x install.sh
-        ./install.sh --release
+        # Skip deps in script since we installed them above, to avoid sudo prompts/errors
+        ./install.sh --release --skip-deps
+
+  test_python:
+    name: Test RAG Python App
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.10"
+
+    - name: Install Python Dependencies
+      run: |
+        cd examples/rag-app
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run Pipeline Tests
+      run: |
+        cd examples/rag-app
+        python test_pipeline.py
