@@ -17,12 +17,19 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y cmake build-essential g++ wget gnupg libssl-dev libcurl4-openssl-dev unzip curl git
+        # Install Clang 19
+        wget https://apt.llvm.org/llvm.sh
+        chmod +x llvm.sh
+        sudo ./llvm.sh 19
+        rm llvm.sh
 
     - name: Build Engine
       run: |
         chmod +x install.sh
-        # Skip deps in script since we installed them above, to avoid sudo prompts/errors
-        ./install.sh --release --skip-deps
+        # Explicitly set compilers for CMake to pick up Clang 19
+        export CC=clang-19
+        export CXX=clang++-19
+        ./install.sh --release --skip-deps --avx2
 
   test_python:
     name: Test RAG Python App
